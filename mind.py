@@ -22,6 +22,7 @@ class Mind:
             speaker=str(self.takeCommand())
             if "come to life" in speaker.lower():
                 engine.setProperty('voice',voices[1].id)
+                self.speak("All the Functionalities have been loaded into the system")
                 return True
             else:
                 self.speak("No functionalities are available right now")

@@ -29,7 +29,11 @@ class MainApp(QMainWindow, ui):
 
     def Handle_Buttons(self):
         self.pushButton.clicked.connect(self.MicActivate)
-        self.mind.speak("All the Functionalities have been loaded into the system")
+        self.pushButton_2.clicked.connect(self.TextActivate)
+    def TextActivate(self):
+        self.mind.speak("Command Received Succesfully")
+        query=self.lineEdit.text()
+        self.executeQuery(query)
 
     def MicActivate(self):
         self.label.setText("Listening...")
@@ -37,6 +41,11 @@ class MainApp(QMainWindow, ui):
         query=self.mind.takeCommand()
         self.label.setText("User said: "+str(query))
 
+        self.executeQuery(query)
+
+        self.label.setText("Press the Mic Button to Activate Command Mode")
+
+    def executeQuery(self,query):
         if query is None:
             self.mind.speak('Please Repeat the Command')
             #self.label.setText("Please Repeat the Command")
@@ -70,13 +79,29 @@ class MainApp(QMainWindow, ui):
             codePath="C:\\Users\\ugarg\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
             self.mind.speak("Initializing Visual Studio Code")
             os.startfile(codePath)
+        
+        elif 'theme' in query.lower():
+            self.mind.speak("You can choose one of the following theme\n1. Dark\n2. Light\n3. Original\n4. Grey\n")
+            
+            if 'dark' in query.lower():
+                self.ApplyDark()
+            elif 'light' in query.lower():
+                self.ApplyLight()
+            elif 'original' in query.lower():
+                self.ApplyOrange()
+            elif 'grey' in query.lower():
+                self.ApplyQDark()
+            else:
+                pass
+            
 
         elif 'sleep' in query.lower():
             self.mind.speak("Ok, {MASTER} I am off!!")
             self.mind=None
             exit(0)
 
-        self.label.setText("Press the Mic Button to Activate Command Mode")
+        query=self.lineEdit.setText("")
+
 
 
     def ApplyOrange(self):
