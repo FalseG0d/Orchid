@@ -1,91 +1,119 @@
-import pyttsx3
-import speech_recognition as sr
-import datetime
-import wikipedia
-import webbrowser
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
+import sys
 import os
-import smtplib
 
-MASTER="Apoorv"
+from mind import *
+from PyQt5.uic import loadUiType
 
-engine=pyttsx3.init('sapi5')
-voices=engine.getProperty('voices')
-engine.setProperty('voice',voices[1].id)
 
-#Pronounces String
-def speak(text):
-    engine.say(text)
-    engine.runAndWait()
-#Greeting Function
-def wishMe():
+ui,_=loadUiType('main.ui')
 
-    hour=int(datetime.datetime.now().hour)
 
-    if hour>=0 and hour <12:
-        speak("Godd Morning "+MASTER)
-    elif hour>=12 and hour<=18:
-        speak("Godd Afternoon "+MASTER)
-    else:
-        speak("Godd Evening "+MASTER)
+class MainApp(QMainWindow, ui):
+    def __init__(self,parent=None):
+        self.mind=Mind()
+        if(self.mind.authorize()):
+            self.mind.wishMe()
+            super(MainApp,self).__init__(parent)
+            QMainWindow.__init__(self)
+            self.setupUi(self)
+            self.InitUI()
+            self.Handle_Buttons()
+            self.label.setText("Press the Mic Button to Activate Command Mode")
 
-    speak(", I am Orchid. How may I help you?")
-#Take voice command
-def takeCommand():
-    r=sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        audio=r.listen(source)
-    try:
-        print("Recognizing....")
-        query=r.recognize_google(audio,language='en-in')
-        print(f"User said: {query}\n")
+    def InitUI(self):
+        self.ApplyOrange()
 
-    except Exception as e:
-        print("Please Repeat: "+str(e))
-        query=None
-    
-    return query
+    def Handle_Buttons(self):
+        self.pushButton.clicked.connect(self.MicActivate)
+        self.mind.speak("All the Functionalities have been loaded into the system")
 
-speak("Initializing Orchid...Listening")
-wishMe()
+    def MicActivate(self):
+        self.label.setText("Listening...")
+        self.mind.speak("I am Listening")
+        query=self.mind.takeCommand()
+        self.label.setText("User said: "+str(query))
 
-while(True):
+        if query is None:
+            self.mind.speak('Please Repeat the Command')
+            #self.label.setText("Please Repeat the Command")
+            
+        elif 'wikipedia' in query.lower():# Search for x in wikipedia
+            self.mind.speak('Searching in wikipedia...')
+            query=query.split(' ')
+            result=wikipedia.summary(query[2],sentences=2)
+            print(result)
+            self.mind.speak(result)
 
-    query=takeCommand()
+        elif 'website' in query.lower():#Open x website
+            self.mind.speak('Initializing Web Browser...')
+            query=query.split(' ')
+            self.mind.speak("Looking for "+query[1])
+            url=query[1]+".com"
+            chrome_path='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
+            webbrowser.get(chrome_path).open(url)
 
-    if query is None:
-        continue
+        elif 'play' in query.lower():#Play x
+            f_dir="C:\\Users\\ugarg\\Videos\\Captures"
+            v_list=os.listdir(f_dir)
+
+            os.startfile(os.path.join(f_dir, v_list[0]))
+
+        elif 'time' in query.lower():#What's the time
+            strTime=datetime.datetime.now().strftime("%H:%M:%S")
+            self.mind.speak(f"The time is {strTime}")
+
+        elif 'code' in query.lower():
+            codePath="C:\\Users\\ugarg\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
+            self.mind.speak("Initializing Visual Studio Code")
+            os.startfile(codePath)
+
+        elif 'sleep' in query.lower():
+            self.mind.speak("Ok, {MASTER} I am off!!")
+            self.mind=None
+            exit(0)
+
+        self.label.setText("Press the Mic Button to Activate Command Mode")
+
+
+    def ApplyOrange(self):
+        self.setStyleSheet(None)
+        style=open('themes/orange.css','r')
+        style=style.read()
+        self.setStyleSheet(style)
+
+    def ApplyDark(self):
+        self.setStyleSheet(None)
+        style=open('themes/dark.css','r')
+        style=style.read()
+        self.setStyleSheet(style)
         
-    elif 'wikipedia' in query.lower():# Search for x in wikipedia
-        speak('Searching in wikipedia...')
-        query=query.split(' ')
-        result=wikipedia.summary(query[2],sentences=2)
-        print(result)
-        speak(result)
+    def ApplyQDark(self):
+        self.setStyleSheet(None)
+        style=open('themes/qdark.css','r')
+        style=style.read()
+        self.setStyleSheet(style)
 
-    elif 'website' in query.lower():#Open x website
-        speak('Initializing Web Browser...')
-        query=query.split(' ')
-        speak("Looking for "+query[1])
-        url=query[1]+".com"
-        chrome_path='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
-        webbrowser.get(chrome_path).open(url)
+    def ApplyLight(self):
+        self.setStyleSheet(None)
+        style=open('themes/light.css','r')
+        style=style.read()
+        self.setStyleSheet(style)
 
-    elif 'play' in query.lower():#Play x
-        f_dir="C:\\Users\\ugarg\\Videos\\Captures"
-        v_list=os.listdir(f_dir)
+    def ApplyNone(self):
+        self.setStyleSheet(None)
 
-        os.startfile(os.path.join(f_dir, v_list[0]))
 
-    elif 'time' in query.lower():#What's the time
-        strTime=datetime.datetime.now().strftime("%H:%M:%S")
-        speak(f"The time is {strTime}")
+def main():
+    
+    app=QApplication(sys.argv)
+    window=MainApp()
+    window.show()
+    app.exec_()
 
-    elif 'code' in query.lower():
-        codePath="C:\\Users\\ugarg\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
-        speak("Initializing Visual Studio Code")
-        os.startfile(codePath)
-
-    elif 'sleep' in query.lower():
-        speak("Ok, {MASTER} I am off!!")
-        break
+        
+if __name__=='__main__':
+    main()
